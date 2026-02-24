@@ -15,10 +15,10 @@
       </view>
     </button>
     <view style="height: 10rpx"></view>
-    <button class="ss-reset-button cancel-btn ui-Shadow-Pioneer-Main" @tap="closeAuthModal">
+    <button class="ss-reset-button cancel-btn ui-Shadow-Pioneer-Main" @tap="wechatLoginWithoutPhone">
       <view class="ss-flex">
         <!--        <image class="auto-login-img" :src="sheep.$url.static('/image/weixin.svg')"/>-->
-        <view>暂不登录</view>
+        <view>微信登录（不绑定手机号）</view>
       </view>
     </button>
   </view>
@@ -32,6 +32,7 @@
 
 <script setup>
 import sheep from '@/sheep'
+import third from '@/sheep/api/third'
 import {computed,reactive} from "vue";
 import { closeAuthModal, showAuthModal } from '@/sheep/hooks/useModal';
 
@@ -57,6 +58,25 @@ async function wechatLogin(e) {
   if (loginRes) {
     sheep.$helper.toast('登录成功')
     closeAuthModal();
+  }
+}
+
+async function wechatLoginWithoutPhone() {
+  const loginResult = await uni.login();
+  if (loginResult.errMsg !== 'login:ok') {
+    sheep.$helper.toast('登录失败，请重试')
+    return;
+  }
+  const res = await third.wechat.miniLogin({ code: loginResult.code });
+  const openId = res?.data?.openId;
+  if (openId) {
+    uni.setStorageSync('openId', openId);
+  }
+  if (res?.data?.token) {
+    sheep.$helper.toast('登录成功')
+    closeAuthModal();
+  } else {
+    sheep.$helper.toast(res?.msg || '登录失败，请重试')
   }
 }
 

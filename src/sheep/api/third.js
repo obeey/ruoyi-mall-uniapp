@@ -63,6 +63,18 @@ export default {
         },
       }),
 
+    // 小程序免手机号登录
+    miniLogin: (params) =>
+      request({
+        url: 'no-auth/wechat/mini-login',
+        method: 'GET',
+        params,
+        custom: {
+          showLoading: true,
+          loadingMsg: '登录中',
+        },
+      }),
+
     // 微信小程序 绑定一键获取的手机号
     bindUserPhoneNumber: (data) =>
       request({

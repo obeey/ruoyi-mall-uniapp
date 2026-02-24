@@ -110,6 +110,8 @@ http.interceptors.response.use(
         response.config.url.includes('no-auth/wechat/getWechatUserAuth')
         ) {
       $store('user').setToken(response.data?.token);
+    } else if (response.config.url.includes('no-auth/wechat/mini-login')) {
+      $store('user').setToken(response.data?.data?.token);
     } else if (response.config.url.includes('no-auth/wechat/getSessionId')) {
       $store('user').setToken(response.data?.data?.token);
     }
