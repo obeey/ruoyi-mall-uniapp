@@ -14,6 +14,11 @@
 
 		// 加载Shopro底层依赖
 		ShoproInit();
+
+		// 默认进入入店码页面
+		uni.reLaunch({
+			url: '/pages/entry/qr-entry',
+		});
 	});
 
 	onError((err) => {

@@ -8,6 +8,18 @@
   },
   "pages": [
     {
+      "path": "pages/entry/qr-entry",
+      "style": {
+        "navigationBarTitleText": "入店码"
+      },
+      "meta": {
+        "auth": true,
+        "sync": true,
+        "title": "入店码",
+        "group": "入店"
+      }
+    },
+    {
       "path": "pages/index/index",
       "aliasPath": "/",
       "style": {
