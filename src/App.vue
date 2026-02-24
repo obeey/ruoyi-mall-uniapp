@@ -9,9 +9,6 @@
 	} from './sheep';
 
 	onLaunch(() => {
-		// 隐藏原生导航栏 使用自定义底部导航
-		uni.hideTabBar();
-
 		// 加载Shopro底层依赖
 		ShoproInit();
 
