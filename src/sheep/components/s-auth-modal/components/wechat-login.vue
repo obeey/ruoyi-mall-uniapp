@@ -33,7 +33,7 @@
 <script setup>
 import sheep from '@/sheep'
 import {computed,reactive} from "vue";
-import { closeAuthModal } from '@/sheep/hooks/useModal';
+import { closeAuthModal, showAuthModal } from '@/sheep/hooks/useModal';
 
 const appInfo = computed(() => sheep.$store('app').info);
 
@@ -47,6 +47,12 @@ function onChange() {
 }
 
 async function wechatLogin(e) {
+  if (e?.detail?.errMsg && e.detail.errMsg !== 'getPhoneNumber:ok') {
+    sheep.$helper.toast('无法获取手机号授权，请使用短信登录');
+    closeAuthModal();
+    showAuthModal('smsLogin');
+    return;
+  }
   const loginRes = await sheep.$platform.useProvider("wechat").login(e.detail);
   if (loginRes) {
     sheep.$helper.toast('登录成功')
