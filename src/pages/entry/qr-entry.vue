@@ -18,9 +18,10 @@
 
 <script setup>
 import { getCurrentInstance, ref } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onShow } from '@dcloudio/uni-app'
 import QSCanvas from 'qs-canvas'
 import sheep from '@/sheep'
+import { showAuthModal } from '@/sheep/hooks/useModal'
 
 const qrImage = ref('')
 const errorMsg = ref('')
@@ -64,7 +65,12 @@ async function drawQr(value) {
   qrImage.value = await qsc.toImage()
 }
 
-onLoad(() => {
+onShow(() => {
+  const userStore = sheep.$store('user')
+  if (!userStore.isLogin) {
+    showAuthModal('wechatMiniLogin')
+    return
+  }
   refreshQr()
 })
 </script>
