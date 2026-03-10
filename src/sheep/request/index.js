@@ -89,7 +89,7 @@ http.interceptors.request.use(
         });
     }
     const token = uni.getStorageSync('token');
-    if (token) config.header['Authorization'] = token;
+    if (token) config.header['Authorization'] = 'Bearer ' + token;
     return config;
   },
   (error) => {
@@ -112,7 +112,7 @@ http.interceptors.response.use(
       $store('user').setToken(response.data?.token);
     } else if (response.config.url.includes('no-auth/wechat/mini-login')) {
       $store('user').setToken(response.data?.data?.token);
-    } else if (response.config.url.includes('no-auth/wechat/getSessionId')) {
+    } else if (response.config.url.includes('no-auth/wechat/getSessionId') || response.config.url.includes('no-auth/wechat/getSessionId2')) {
       $store('user').setToken(response.data?.data?.token);
     }
     response.config.custom.showLoading && closeLoading();
