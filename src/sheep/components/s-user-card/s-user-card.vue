@@ -17,7 +17,7 @@
         </view>
         <view>
           <view class="nickname-box ss-flex ss-col-center">
-            <view class="nick-name ss-m-r-20">{{ userInfo?.nickname || nickname }}</view>
+            <view class="nick-name ss-m-r-20">{{ displayName }}</view>
           </view>
         </view>
       </view>
@@ -66,6 +66,12 @@
 
   // 是否登录
   const isLogin = computed(() => sheep.$store('user').isLogin);
+  const displayName = computed(() => {
+    if (!isLogin.value) {
+      return props.nickname;
+    }
+    return userInfo.value?.nickname || userInfo.value?.phone || '已登录用户';
+  });
   // 接收参数
   const props = defineProps({
     background: {

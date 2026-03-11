@@ -136,6 +136,7 @@ onShow(() => {
     openLoginModal();
     return;
   }
+  userStore.updateUserData();
   refreshQr();
 });
 
