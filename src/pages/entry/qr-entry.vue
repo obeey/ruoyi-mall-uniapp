@@ -2,21 +2,28 @@
   <s-layout
     title="入店码"
     navbar="custom"
-    tabbar="/pages/index/index"
+    tabbar="/pages/entry/qr-entry"
     :show-header-button="false"
   >
     <view class="entry-wrap">
       <view class="qr-card">
-        <view class="title">入店二维码</view>
-        <image v-if="qrImage" class="qr-img" :src="qrImage" mode="aspectFit" />
-        <view v-else class="qr-loading">正在生成...</view>
-        <view class="hint">将二维码对准闸机扫码口</view>
+        <view class="title">{{ isLogin ? "入店二维码" : "登录后查看入店码" }}</view>
+        <image v-if="isLogin && qrImage" class="qr-img" :src="qrImage" mode="aspectFit" />
+        <view v-else class="qr-loading">
+          {{ isLogin ? "正在生成..." : "登录后生成当前用户专属二维码" }}
+        </view>
+        <view class="hint">
+          {{ isLogin ? "将二维码对准闸机扫码口" : "扫码会识别当前登录用户身份" }}
+        </view>
       </view>
 
-      <button class="ss-reset-button refresh-btn" @tap="refreshQr">
+      <button v-if="isLogin" class="ss-reset-button refresh-btn" @tap="refreshQr">
         刷新二维码
       </button>
-      <view v-if="errorMsg" class="error-msg">{{ errorMsg }}</view>
+      <button v-else class="ss-reset-button refresh-btn" @tap="openLoginModal">
+        立即登录
+      </button>
+      <view v-if="isLogin && errorMsg" class="error-msg">{{ errorMsg }}</view>
     </view>
 
     <canvas
@@ -32,7 +39,7 @@
 </template>
 
 <script setup>
-import { getCurrentInstance, nextTick, reactive, ref } from "vue";
+import { computed, getCurrentInstance, nextTick, reactive, ref, watch } from "vue";
 import { onShow } from "@dcloudio/uni-app";
 import QSCanvas from "qs-canvas";
 import sheep from "@/sheep";
@@ -41,12 +48,34 @@ import { showAuthModal } from "@/sheep/hooks/useModal";
 const qrImage = ref("");
 const errorMsg = ref("");
 const instance = getCurrentInstance();
+const userStore = sheep.$store("user");
+const isLogin = computed(() => userStore.isLogin);
 const canvasSize = reactive({
   width: 10,
   height: 10,
 });
 
+uni.hideTabBar();
+
+function clearQrState() {
+  qrImage.value = "";
+  errorMsg.value = "";
+}
+
+function openLoginModal() {
+  // #ifdef MP-WEIXIN
+  showAuthModal("wechatMiniLogin");
+  // #endif
+  // #ifdef H5
+  showAuthModal("smsLogin");
+  // #endif
+}
+
 async function refreshQr() {
+  if (!isLogin.value) {
+    clearQrState();
+    return;
+  }
   errorMsg.value = "";
   qrImage.value = "";
   try {
@@ -102,9 +131,17 @@ async function drawQr(value) {
 }
 
 onShow(() => {
-  const userStore = sheep.$store("user");
-  if (!userStore.isLogin) {
-    showAuthModal("wechatMiniLogin");
+  if (!isLogin.value) {
+    clearQrState();
+    openLoginModal();
+    return;
+  }
+  refreshQr();
+});
+
+watch(isLogin, (loggedIn) => {
+  if (!loggedIn) {
+    clearQrState();
     return;
   }
   refreshQr();
@@ -145,9 +182,11 @@ onShow(() => {
 .qr-loading {
   width: 420rpx;
   height: 420rpx;
+  padding: 0 40rpx;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-align: center;
   color: #8c8c8c;
   font-size: 26rpx;
   background: #f7f7f7;

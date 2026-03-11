@@ -16,14 +16,14 @@
         :text="item.text"
         :name="item.url"
         :isCenter="getTabbarCenter(index)"
-        :centerImage="sheep.$url.cdn(item.inactiveIcon)"
-        @tap="sheep.$router.go(item.url)"
+        :centerImage="resolveIcon(item.inactiveIcon)"
+        @tap="onTabTap(item.url)"
       >
         <template v-slot:active-icon>
-          <image class="u-page__item__slot-icon" :src="sheep.$url.static(item.activeIcon)"></image>
+          <image class="u-page__item__slot-icon" :src="resolveIcon(item.activeIcon)"></image>
         </template>
         <template v-slot:inactive-icon>
-          <image class="u-page__item__slot-icon" :src="sheep.$url.static(item.inactiveIcon)"></image>
+          <image class="u-page__item__slot-icon" :src="resolveIcon(item.inactiveIcon)"></image>
         </template>
       </su-tabbar-item>
     </su-tabbar>
@@ -54,6 +54,21 @@
     return unref(tabbar).list % 2 > 0
       ? Math.ceil(unref(tabbar).list.length / 2) === index + 1
       : false;
+  };
+
+  const resolveIcon = (icon) => {
+    if (!icon) return '';
+    if (icon.startsWith('http') || icon.startsWith('/static/')) {
+      return icon;
+    }
+    return sheep.$url.static(icon);
+  };
+
+  const onTabTap = (url) => {
+    if (!url || props.path === url) return;
+    uni.switchTab({
+      url,
+    });
   };
 
   const props = defineProps({

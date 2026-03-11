@@ -117,6 +117,12 @@ const app = defineStore({
                     "activeColor": "#FF7A0C",
                     "list": [
                         {
+                            "inactiveIcon": "/static/tabbar/entry.svg",
+                            "activeIcon": "/static/tabbar/entry-active.svg",
+                            "url": "/pages/entry/qr-entry",
+                            "text": "进店码"
+                        },
+                        {
                             "inactiveIcon": "https://git-open.oss-cn-shenzhen.aliyuncs.com/ruoyi-mall/uniapp/icons/home.png",
                             "activeIcon": "https://git-open.oss-cn-shenzhen.aliyuncs.com/ruoyi-mall/uniapp/home.gif",
                             "url": "\/pages\/index\/index",

@@ -800,6 +800,9 @@
   "tabBar": {
     "list": [
       {
+        "pagePath": "pages/entry/qr-entry"
+      },
+      {
         "pagePath": "pages/index/index"
       },
       {
