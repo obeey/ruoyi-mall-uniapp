@@ -1,5 +1,10 @@
 <template>
-  <s-layout title="入店码" navbar="custom" :show-header-button="false">
+  <s-layout
+    title="入店码"
+    navbar="custom"
+    tabbar="/pages/index/index"
+    :show-header-button="false"
+  >
     <view class="entry-wrap">
       <view class="qr-card">
         <view class="title">入店二维码</view>
