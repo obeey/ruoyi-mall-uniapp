@@ -5,7 +5,7 @@
 <!--      <view class="head-title ss-m-r-40 head-title-animation">微信登录</view>-->
 <!--    </view>-->
 <!--  </view>-->
-  <view>欢迎您登录【若依商城电商系统】</view>
+  <view>欢迎您登录【AI随时买】</view>
   <view style="margin-top: 200rpx">
     <button class="ss-reset-button buy-btn ui-Success-Main" open-type="getPhoneNumber"
             @getphonenumber="wechatLogin">
