@@ -3,26 +3,26 @@
  * @description api模块管理，loading配置，请求拦截，错误处理
  */
 
-import Request from 'luch-request';
-import {apiPath, baseUrl} from '@/sheep/config';
-import $store from '@/sheep/store';
-import $platform from '@/sheep/platform';
-import {showAuthModal} from '@/sheep/hooks/useModal';
-import sheep from '@/sheep';
+import Request from "luch-request";
+import { apiPath, baseUrl } from "@/sheep/config";
+import $store from "@/sheep/store";
+import $platform from "@/sheep/platform";
+import { showAuthModal } from "@/sheep/hooks/useModal";
+import sheep from "@/sheep";
 
 const options = {
   // 显示操作成功消息 默认不显示
   showSuccess: false,
   // 成功提醒 默认使用后端返回值
-  successMsg: '',
+  successMsg: "",
   // 显示失败消息 默认显示
   showError: true,
   // 失败提醒 默认使用后端返回信息
-  errorMsg: '',
+  errorMsg: "",
   // 显示请求时loading模态框 默认显示
   showLoading: true,
   // loading提醒文字
-  loadingMsg: '加载中',
+  loadingMsg: "加载中",
   // 需要授权才能请求 默认放开
   auth: false,
   // ...
@@ -30,8 +30,8 @@ const options = {
 
 // Loading全局实例
 let LoadingInstance = {
-  target: null,
   count: 0,
+  visible: false,
 };
 
 /**
@@ -39,7 +39,10 @@ let LoadingInstance = {
  */
 function closeLoading() {
   if (LoadingInstance.count > 0) LoadingInstance.count--;
-  if (LoadingInstance.count === 0) uni.hideLoading();
+  if (LoadingInstance.count === 0 && LoadingInstance.visible) {
+    uni.hideLoading();
+    LoadingInstance.visible = false;
+  }
 }
 
 /**
@@ -48,10 +51,10 @@ function closeLoading() {
 const http = new Request({
   baseURL: baseUrl,
   timeout: 8000,
-  method: 'GET',
+  method: "GET",
   header: {
-    Accept: 'application/json',
-    'Content-Type': 'application/json;charset=UTF-8',
+    Accept: "application/json",
+    "Content-Type": "application/json;charset=UTF-8",
     platform: $platform.name,
   },
   // #ifdef APP-PLUS
@@ -69,32 +72,34 @@ const http = new Request({
  */
 http.interceptors.request.use(
   (config) => {
-    if (config.custom.auth && !$store('user').isLogin) {
-      if ($platform.name === 'WechatMiniProgram') {
-        showAuthModal('wechatMiniLogin')
+    if (config.custom.auth && !$store("user").isLogin) {
+      if ($platform.name === "WechatMiniProgram") {
+        showAuthModal("wechatMiniLogin");
       } else {
-        showAuthModal('smsLogin')
+        showAuthModal("smsLogin");
       }
       return Promise.reject();
     }
     if (config.custom.showLoading) {
       LoadingInstance.count++;
       LoadingInstance.count === 1 &&
+        (LoadingInstance.visible = true) &&
         uni.showLoading({
           title: config.custom.loadingMsg,
           mask: true,
           fail: () => {
-            uni.hideLoading();
+            LoadingInstance.count = 0;
+            LoadingInstance.visible = false;
           },
         });
     }
-    const token = uni.getStorageSync('token');
-    if (token) config.header['Authorization'] = 'Bearer ' + token;
+    const token = uni.getStorageSync("token");
+    if (token) config.header["Authorization"] = "Bearer " + token;
     return config;
   },
   (error) => {
     return Promise.reject(error);
-  },
+  }
 );
 
 /**
@@ -103,64 +108,73 @@ http.interceptors.request.use(
 http.interceptors.response.use(
   (response) => {
     // 自动设置登陆令牌
-    if (response.config.url.includes('h5/account/login') ||
-        response.config.url.includes('h5/sms/login') ||
-        response.config.url.includes('h5/wechat/login') ||
-        response.config.url.includes('h5/register') ||
-        response.config.url.includes('no-auth/wechat/getWechatUserAuth')
-        ) {
-      $store('user').setToken(response.data?.token);
-    } else if (response.config.url.includes('no-auth/wechat/mini-login')) {
-      $store('user').setToken(response.data?.data?.token);
-    } else if (response.config.url.includes('no-auth/wechat/getSessionId') || response.config.url.includes('no-auth/wechat/getSessionId2')) {
-      $store('user').setToken(response.data?.data?.token);
+    if (
+      response.config.url.includes("h5/account/login") ||
+      response.config.url.includes("h5/sms/login") ||
+      response.config.url.includes("h5/wechat/login") ||
+      response.config.url.includes("h5/register") ||
+      response.config.url.includes("no-auth/wechat/getWechatUserAuth")
+    ) {
+      $store("user").setToken(response.data?.token);
+    } else if (response.config.url.includes("no-auth/wechat/mini-login")) {
+      $store("user").setToken(response.data?.data?.token);
+    } else if (
+      response.config.url.includes("no-auth/wechat/getSessionId") ||
+      response.config.url.includes("no-auth/wechat/getSessionId2")
+    ) {
+      $store("user").setToken(response.data?.data?.token);
     }
     response.config.custom.showLoading && closeLoading();
-    const { data } = response
-    if (data && data.code && data.code !== 200){
-      let errorMsg = data.msg
-      if (data.code === 401){
+    const { data } = response;
+    if (data && data.code && data.code !== 200) {
+      let errorMsg = data.msg;
+      if (data.code === 401) {
         //无权限
-        const userStore = $store('user')
-        const isLogin = userStore.isLogin
+        const userStore = $store("user");
+        const isLogin = userStore.isLogin;
         if (isLogin) {
-          errorMsg = '您的登录已过期'
+          errorMsg = "您的登录已过期";
         } else {
-          errorMsg = '请先登录'
+          errorMsg = "请先登录";
         }
-        userStore.logout(true)
+        userStore.logout(true);
         // 获取当前页面栈数组
         const pages = getCurrentPages();
         // 获取数组中的最后一个元素，即当前页面
         const currentPage = pages[pages.length - 1];
         // 获取当前页面的路径
         const currentPath = currentPage.route;
-        if (!['pages/index/accountIndex','pages/index/index'].includes(currentPath)) {
-          sheep.$helper.toast(errorMsg)
-          if ($platform.name === 'WechatMiniProgram') {
-            showAuthModal('wechatMiniLogin')
+        if (
+          !["pages/index/accountIndex", "pages/index/index"].includes(
+            currentPath
+          )
+        ) {
+          sheep.$helper.toast(errorMsg);
+          if ($platform.name === "WechatMiniProgram") {
+            showAuthModal("wechatMiniLogin");
           } else {
-            showAuthModal('smsLogin')
+            showAuthModal("smsLogin");
           }
         }
-      }
-      else if (data.code === 500){
-        sheep.$helper.toast(errorMsg)
-      }
-      else {
+      } else if (data.code === 500) {
+        sheep.$helper.toast(errorMsg);
+      } else {
         uni.showToast({
-          title: errorMsg || '服务器开小差啦,请稍后再试~',
-          icon: 'none',
+          title: errorMsg || "服务器开小差啦,请稍后再试~",
+          icon: "none",
           mask: true,
         });
       }
-      return Promise.reject(errorMsg)
+      return Promise.reject(errorMsg);
     }
     //成功的提示
-    if (response.config.custom.showSuccess && response.config.custom.successMsg) {
+    if (
+      response.config.custom.showSuccess &&
+      response.config.custom.successMsg
+    ) {
       uni.showToast({
         title: response.config.custom.successMsg,
-        icon: 'none',
+        icon: "none",
       });
     }
     return Promise.resolve(data);
@@ -185,6 +199,10 @@ http.interceptors.response.use(
     // }
   },
   (error) => {
+    const custom = error?.config?.custom || error?.response?.config?.custom;
+    if (custom?.showLoading) {
+      closeLoading();
+    }
     // const userStore = $store('user');
     // const isLogin = userStore.isLogin;
     // let errorMessage = '网络请求出错';
@@ -252,11 +270,11 @@ http.interceptors.response.use(
     // }
     //
     return false;
-  },
+  }
 );
 
 const request = (config) => {
-  if (config.url[0] !== '/') {
+  if (config.url[0] !== "/") {
     config.url = apiPath + config.url;
   }
   return http.middleware(config);

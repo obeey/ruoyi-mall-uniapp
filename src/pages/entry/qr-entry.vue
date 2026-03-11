@@ -8,71 +8,102 @@
         <view class="hint">将二维码对准闸机扫码口</view>
       </view>
 
-      <button class="ss-reset-button refresh-btn" @tap="refreshQr">刷新二维码</button>
+      <button class="ss-reset-button refresh-btn" @tap="refreshQr">
+        刷新二维码
+      </button>
       <view v-if="errorMsg" class="error-msg">{{ errorMsg }}</view>
     </view>
 
-    <canvas canvas-id="entryQrCanvas" id="entryQrCanvas" class="qr-canvas"></canvas>
+    <canvas
+      canvas-id="entryQrCanvas"
+      id="entryQrCanvas"
+      class="qr-canvas"
+      :style="{
+        width: `${canvasSize.width}px`,
+        height: `${canvasSize.height}px`,
+      }"
+    ></canvas>
   </s-layout>
 </template>
 
 <script setup>
-import { getCurrentInstance, ref } from 'vue'
-import { onShow } from '@dcloudio/uni-app'
-import QSCanvas from 'qs-canvas'
-import sheep from '@/sheep'
-import { showAuthModal } from '@/sheep/hooks/useModal'
+import { getCurrentInstance, nextTick, reactive, ref } from "vue";
+import { onShow } from "@dcloudio/uni-app";
+import QSCanvas from "qs-canvas";
+import sheep from "@/sheep";
+import { showAuthModal } from "@/sheep/hooks/useModal";
 
-const qrImage = ref('')
-const errorMsg = ref('')
-const instance = getCurrentInstance()
+const qrImage = ref("");
+const errorMsg = ref("");
+const instance = getCurrentInstance();
+const canvasSize = reactive({
+  width: 10,
+  height: 10,
+});
 
 async function refreshQr() {
-  errorMsg.value = ''
-  qrImage.value = ''
+  errorMsg.value = "";
+  qrImage.value = "";
   try {
-    const res = await sheep.$api.entry.getEntryQrToken()
-    const token = res?.data?.qr_token
+    const res = await sheep.$api.entry.getEntryQrToken();
+    const token = res?.data?.qr_token;
     if (!token) {
-      throw new Error('empty token')
+      throw new Error("empty token");
     }
-    await drawQr(token)
+    await drawQr(token);
   } catch (e) {
-    errorMsg.value = '扫码失败，请重试'
+    errorMsg.value = "扫码失败，请重试";
   }
 }
 
 async function drawQr(value) {
-  const size = 520
+  const size = 520;
+  canvasSize.width = size;
+  canvasSize.height = size;
+  await nextTick();
   const qsc = new QSCanvas(
     {
-      canvasId: 'entryQrCanvas',
+      canvasId: "entryQrCanvas",
       width: size,
       height: size,
-      setCanvasWH: () => {},
+      setCanvasWH: (canvas) => {
+        canvasSize.width = canvas.width;
+        canvasSize.height = canvas.height;
+      },
     },
-    instance,
-  )
+    instance
+  );
 
+  await qsc.updateCanvasWH({
+    width: size,
+    height: size,
+    delay: 80,
+  });
   await qsc.drawQrCode({
-    type: 'qrcode',
+    type: "qrcode",
     val: value,
     x: 0,
     y: 0,
     size,
-  })
-  await qsc.draw()
-  qrImage.value = await qsc.toImage()
+  });
+  await qsc.draw();
+  await new Promise((resolve) => setTimeout(resolve, 80));
+  qrImage.value = await qsc.toImage({
+    width: size,
+    height: size,
+    destWidth: size,
+    destHeight: size,
+  });
 }
 
 onShow(() => {
-  const userStore = sheep.$store('user')
+  const userStore = sheep.$store("user");
   if (!userStore.isLogin) {
-    showAuthModal('wechatMiniLogin')
-    return
+    showAuthModal("wechatMiniLogin");
+    return;
   }
-  refreshQr()
-})
+  refreshQr();
+});
 </script>
 
 <style scoped lang="scss">
@@ -142,8 +173,10 @@ onShow(() => {
 }
 
 .qr-canvas {
-  width: 0;
-  height: 0;
+  position: fixed;
+  top: -99999rpx;
+  left: -99999rpx;
   opacity: 0;
+  pointer-events: none;
 }
 </style>

@@ -759,6 +759,11 @@ export function useChatWebSocket(socketConfig) {
       const canvas = document.createElement('canvas');
       const context = canvas.getContext('2d');
       const { width: originWidth, height: originHeight } = img;
+      // 检查图片尺寸是否有效
+      if (originWidth <= 0 || originHeight <= 0) {
+        reject(new Error('Invalid image dimensions: width or height is 0'));
+        return;
+      }
       // 最大尺寸限制
       const maxWidth = mx;
       const maxHeight = mh;
@@ -775,6 +780,11 @@ export function useChatWebSocket(socketConfig) {
           targetHeight = maxHeight;
           targetWidth = Math.round(maxHeight * (originWidth / originHeight));
         }
+      }
+      // 确保目标尺寸有效
+      if (targetWidth <= 0 || targetHeight <= 0) {
+        reject(new Error('Invalid target dimensions: width or height is 0'));
+        return;
       }
       canvas.width = targetWidth;
       canvas.height = targetHeight;
