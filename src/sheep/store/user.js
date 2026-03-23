@@ -111,8 +111,17 @@ const user = defineStore({
       }
       const nowTime = new Date().getTime();
       if (this.lastUpdateTime + 5000 > nowTime) return;
-      Promise.all([this.getInfo(),this.getNumData()])
       this.lastUpdateTime = nowTime;
+      const [infoResult, numDataResult] = await Promise.allSettled([
+        this.getInfo(),
+        this.getNumData(),
+      ]);
+      if (infoResult.status === 'rejected') {
+        console.warn('updateUserData:getInfo failed', infoResult.reason);
+      }
+      if (numDataResult.status === 'rejected') {
+        console.warn('updateUserData:getNumData failed', numDataResult.reason);
+      }
       return this.userInfo;
     },
 
