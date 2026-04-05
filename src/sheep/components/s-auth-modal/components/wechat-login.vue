@@ -54,29 +54,42 @@ async function wechatLogin(e) {
     showAuthModal('smsLogin');
     return;
   }
-  const loginRes = await sheep.$platform.useProvider("wechat").login(e.detail);
-  if (loginRes) {
-    sheep.$helper.toast('登录成功')
-    closeAuthModal();
+  try {
+    const loginRes = await sheep.$platform.useProvider("wechat").login(e.detail);
+    if (loginRes) {
+      sheep.$helper.toast('登录成功')
+      closeAuthModal();
+      return;
+    }
+    sheep.$helper.toast('登录失败，请重试');
+  } catch (error) {
+    console.error('wechat phone login failed', error);
+    sheep.$helper.toast(error?.message || error || '登录失败，请重试');
   }
 }
 
 async function wechatLoginWithoutPhone() {
-  const loginResult = await uni.login();
-  if (loginResult.errMsg !== 'login:ok') {
-    sheep.$helper.toast('登录失败，请重试')
-    return;
-  }
-  const res = await third.wechat.miniLogin({ code: loginResult.code });
-  const openId = res?.data?.openId;
-  if (openId) {
-    uni.setStorageSync('openId', openId);
-  }
-  if (res?.data?.token) {
-    sheep.$helper.toast('登录成功')
-    closeAuthModal();
-  } else {
-    sheep.$helper.toast(res?.msg || '登录失败，请重试')
+  try {
+    const loginResult = await uni.login();
+    if (loginResult.errMsg !== 'login:ok' || !loginResult.code) {
+      console.error('mini login uni.login failed', loginResult);
+      sheep.$helper.toast('微信授权码获取失败，请检查小程序 AppID 配置');
+      return;
+    }
+    const res = await third.wechat.miniLogin({ code: loginResult.code });
+    const openId = res?.data?.openId;
+    if (openId) {
+      uni.setStorageSync('openId', openId);
+    }
+    if (res?.data?.token) {
+      sheep.$helper.toast('登录成功')
+      closeAuthModal();
+    } else {
+      sheep.$helper.toast(res?.msg || '登录失败，请重试')
+    }
+  } catch (error) {
+    console.error('mini login failed', error);
+    sheep.$helper.toast(error?.message || error || '登录失败，请重试');
   }
 }
 

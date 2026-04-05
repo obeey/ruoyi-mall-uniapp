@@ -37,6 +37,9 @@ const login = async (e) => {
     )
     third.wechat.login({ data }).then(resp => {
       resolve(true);
+    }).catch((error) => {
+      console.error('wechat miniProgram login request failed', error);
+      reject(error);
     });
   });
 };
@@ -79,7 +82,7 @@ const getSessionId = async () => {
   if (loginResult.errMsg === 'login:ok') {
     code = loginResult.code;
   } else {
-    getSessionId();
+    console.error('getSessionId uni.login failed', loginResult);
     return false;
   }
 
@@ -92,6 +95,7 @@ const getSessionId = async () => {
     uni.setStorageSync("openId", obj.openId);
     return true;
   }
+  console.error('getSessionId2 returned empty data', data);
   return false;
 };
 

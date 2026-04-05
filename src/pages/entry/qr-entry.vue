@@ -193,7 +193,9 @@ onShow(() => {
     openLoginModal();
     return;
   }
-  userStore.updateUserData();
+  userStore.updateUserData().catch((error) => {
+    console.warn("qr-entry updateUserData failed", error);
+  });
   if (agreementAccepted.value) {
     refreshQr();
   } else {
