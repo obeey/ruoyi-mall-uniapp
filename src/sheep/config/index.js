@@ -12,6 +12,13 @@ export const apiPath = import.meta.env.SHOPRO_API_PATH;
 
 export const staticUrl = import.meta.env.SHOPRO_STATIC_URL;
 
+console.log('[Shopro config]', {
+  nodeEnv: process.env.NODE_ENV,
+  baseUrl,
+  apiPath,
+  staticUrl,
+});
+
 export default {
   baseUrl,
   apiPath,

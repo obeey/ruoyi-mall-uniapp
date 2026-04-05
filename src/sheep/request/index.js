@@ -118,12 +118,8 @@ http.interceptors.response.use(
       $store("user").setToken(response.data?.token);
     } else if (response.config.url.includes("no-auth/wechat/mini-login")) {
       $store("user").setToken(response.data?.data?.token);
-    } else if (
-      response.config.url.includes("no-auth/wechat/getSessionId") ||
-      response.config.url.includes("no-auth/wechat/getSessionId2")
-    ) {
-      $store("user").setToken(response.data?.data?.token);
     }
+    // getSessionId/getSessionId2 仅用于换取 openId/sessionId，不应覆盖正式登录态。
     response.config.custom.showLoading && closeLoading();
     const { data } = response;
     if (data && data.code && data.code !== 200) {
@@ -276,6 +272,21 @@ http.interceptors.response.use(
 const request = (config) => {
   if (config.url[0] !== "/") {
     config.url = apiPath + config.url;
+  }
+  if (!baseUrl || typeof baseUrl !== "string") {
+    console.error("[request] invalid baseUrl", {
+      baseUrl,
+      apiPath,
+      url: config.url,
+      originalConfig: config,
+    });
+  } else {
+    console.log("[request]", {
+      baseUrl,
+      url: config.url,
+      fullUrl: `${baseUrl}${config.url}`,
+      method: config.method || "GET",
+    });
   }
   return http.middleware(config);
 };
