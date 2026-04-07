@@ -90,23 +90,24 @@ export default {
     //上传
     upload: (file, callback) => {
         const token = uni.getStorageSync('token');
+        const normalizedBaseUrl = (baseUrl || '').replace(/\/+$/, '');
         uni.showLoading({
             title: '上传中',
         });
         return new Promise((resolve, reject) => {
             uni.uploadFile({
-                url: baseUrl + '/h5/file/upload',
+                url: normalizedBaseUrl + '/h5/file/upload',
                 filePath: file,
                 name: 'file',
                 header: {
-                    Authorization: token,
+                    Authorization: token ? 'Bearer ' + token : '',
                 },
                 success: (uploadFileRes) => {
                     return resolve(uploadFileRes.data);
                 },
                 fail: (error) => {
                     console.log('上传失败：', error);
-                    return resolve(false);
+                    return reject(error);
                 },
                 complete: () => {
                     uni.hideLoading();

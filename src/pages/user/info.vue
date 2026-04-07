@@ -130,6 +130,8 @@
       phone: '',
       faceImageUrl: '',
     },
+    avatarTempFile: '',
+    faceTempFile: '',
     submitting: false,
   });
 
@@ -143,10 +145,18 @@
 
   const userInfo = computed(() => sheep.$store('user').userInfo);
   const avatarPreview = computed(() =>
-    state.model.avatar ? sheep.$url.cdn(state.model.avatar) : sheep.$url.static(defaultAvatar),
+    state.avatarTempFile
+      ? state.avatarTempFile
+      : state.model.avatar
+        ? sheep.$url.cdn(state.model.avatar)
+        : sheep.$url.static(defaultAvatar),
   );
   const facePreview = computed(() =>
-    state.model.faceImageUrl ? sheep.$url.cdn(state.model.faceImageUrl) : '',
+    state.faceTempFile
+      ? state.faceTempFile
+      : state.model.faceImageUrl
+        ? sheep.$url.cdn(state.model.faceImageUrl)
+        : '',
   );
 
   function onChangeGender(e) {
@@ -175,9 +185,10 @@
         if (!tempUrl) {
           return;
         }
-        const uploadedUrl = await uploadFileToOss(tempUrl);
-        if (uploadedUrl) {
-          state.model[field] = uploadedUrl;
+        if (field === 'avatar') {
+          state.avatarTempFile = tempUrl;
+        } else if (field === 'faceImageUrl') {
+          state.faceTempFile = tempUrl;
         }
       },
     });
@@ -201,13 +212,30 @@
     }
     state.submitting = true;
     try {
+      let avatar = state.model.avatar;
+      let faceImageUrl = state.model.faceImageUrl;
+
+      if (state.avatarTempFile) {
+        avatar = await uploadFileToOss(state.avatarTempFile);
+        if (!avatar) {
+          return;
+        }
+      }
+      if (state.faceTempFile) {
+        faceImageUrl = await uploadFileToOss(state.faceTempFile);
+        if (!faceImageUrl) {
+          return;
+        }
+      }
+
       await sheep.$api.user.update({
-        avatar: state.model.avatar,
+        avatar,
         nickname: state.model.nickname,
         gender: state.model.gender,
-        faceImageUrl: state.model.faceImageUrl,
+        faceImageUrl,
       });
       await getUserInfo();
+      sheep.$router.back();
     } finally {
       state.submitting = false;
     }
@@ -219,6 +247,8 @@
       ...clone(profile),
       faceImageUrl: profile?.faceImageUrl || '',
     };
+    state.avatarTempFile = '';
+    state.faceTempFile = '';
   };
 
   onBeforeMount(async () => {
