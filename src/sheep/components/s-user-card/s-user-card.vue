@@ -22,7 +22,7 @@
         </view>
       </view>
       <view class="right-box ss-m-r-52">
-        <button class="ss-reset-button" @tap="sheep.$helper.toast('功能暂未开发')">
+        <button class="ss-reset-button" @tap="handleOpenProfile">
           <text class="sicon-qrcode"></text>
         </button>
       </view>
@@ -56,10 +56,9 @@
    *
    *
    */
-  import { computed, reactive } from 'vue';
+  import { computed } from 'vue';
   import sheep from '@/sheep';
-  import { showShareModal, showAuthModal } from '@/sheep/hooks/useModal';
-  import {tap} from "lodash/seq";
+  import { showAuthModal } from '@/sheep/hooks/useModal';
 
   // 用户信息
   const userInfo = computed(() => sheep.$store('user').userInfo);
@@ -113,6 +112,14 @@
       }
       showAuthModal('smsLogin')
     }
+  }
+
+  function handleOpenProfile() {
+    if (!isLogin.value) {
+      handleLogin();
+      return;
+    }
+    sheep.$router.go('/pages/user/info');
   }
 </script>
 
