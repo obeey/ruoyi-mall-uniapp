@@ -165,6 +165,10 @@
     cart.delete(state.selectedIds);
   }
 
+  onShow(() => {
+    cart.getList();
+  });
+
 </script>
 
 <style lang="scss" scoped>

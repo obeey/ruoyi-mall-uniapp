@@ -26,11 +26,20 @@ const cart = defineStore({
     async getList() {
       const list = await cartApi.list();
       list.forEach(it => {
-        let str = "";
-        const obj = JSON.parse(it.spData);
-        Object.keys(obj).forEach(key => {
-          str += key + "：" + obj[key] + " ";
-        });
+        let str = '';
+        let obj = null;
+        if (it.spData) {
+          try {
+            obj = JSON.parse(it.spData);
+          } catch (e) {
+            obj = null;
+          }
+        }
+        if (obj && typeof obj === 'object') {
+          Object.keys(obj).forEach(key => {
+            str += key + '：' + obj[key] + ' ';
+          });
+        }
         it.spDataValue = str;
       });
       this.list = list;

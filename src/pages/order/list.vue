@@ -173,7 +173,7 @@
 
 <script setup>
   import { computed, reactive } from 'vue';
-  import { onLoad, onReachBottom, onPullDownRefresh } from '@dcloudio/uni-app';
+  import { onLoad, onReachBottom, onPullDownRefresh, onShow } from '@dcloudio/uni-app';
   import { formatOrderColor, getOrderStatusName, getOrderAfterSaleStatusName } from '@/sheep/hooks/useGoods';
   import sheep from '@/sheep';
   import _, {clone} from 'lodash';
@@ -372,10 +372,19 @@
     content.forEach(it => {
       it.orderItemList.forEach(item => {
         let str = "";
-        const obj = JSON.parse(item.spData);
-        Object.keys(obj).forEach((key) => {
-          str += key + "：" + obj[key] + " ";
-        });
+        let obj = null;
+        if (item.spData) {
+          try {
+            obj = JSON.parse(item.spData);
+          } catch (e) {
+            obj = null;
+          }
+        }
+        if (obj && typeof obj === 'object') {
+          Object.keys(obj).forEach((key) => {
+            str += key + "：" + obj[key] + " ";
+          });
+        }
         item.spDataValue = str;
       })
     })
@@ -390,9 +399,14 @@
 
   onLoad(async (options) => {
     if (options.type) {
-      state.currentTab = options.type;
+      state.currentTab = Number(options.type);
     }
     getOrderList();
+  });
+
+  onShow(() => {
+    sheep.$store('user').updateUserData();
+    reloadData();
   });
 
   // 加载更多
