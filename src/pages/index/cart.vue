@@ -38,24 +38,59 @@
 <script setup>
   import sheep from '@/sheep';
   import { computed, reactive } from 'vue';
-  import { onPullDownRefresh, onShow } from '@dcloudio/uni-app';
+  import { onHide, onPullDownRefresh, onShow, onUnload } from '@dcloudio/uni-app';
+
+  const CART_POLLING_INTERVAL = 1000;
 
   const sys_navBar = sheep.$platform.navbar;
   const cart = sheep.$store('cart');
 
   const state = reactive({
     list: computed(() => cart.list),
+    refreshTimer: null,
+    isRefreshing: false,
   });
+
+  async function refreshCartList() {
+    if (state.isRefreshing) return;
+    state.isRefreshing = true;
+    try {
+      await cart.getList();
+    } finally {
+      state.isRefreshing = false;
+    }
+  }
+
+  function clearRefreshTimer() {
+    if (state.refreshTimer) {
+      clearInterval(state.refreshTimer);
+      state.refreshTimer = null;
+    }
+  }
+
+  function startRefreshTimer() {
+    clearRefreshTimer();
+    state.refreshTimer = setInterval(() => {
+      refreshCartList();
+    }, CART_POLLING_INTERVAL);
+  }
 
   onShow(() => {
-    cart.getList();
+    refreshCartList();
+    startRefreshTimer();
   });
 
-  onPullDownRefresh(() => {
-    cart.getList();
-    setTimeout(() => {
-      uni.stopPullDownRefresh();
-    }, 800);
+  onHide(() => {
+    clearRefreshTimer();
+  });
+
+  onUnload(() => {
+    clearRefreshTimer();
+  });
+
+  onPullDownRefresh(async () => {
+    await refreshCartList();
+    uni.stopPullDownRefresh();
   });
 </script>
 
