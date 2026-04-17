@@ -16,19 +16,52 @@
       </view>
 
       <view class="cart-content ss-flex-1 ss-p-x-30 ss-m-b-40">
-        <view class="goods-box ss-r-10 ss-m-b-14" v-for="item in state.list" :key="item.id">
-          <s-goods-item
-            :title="item.productName"
-            :img="item.pic"
-            :price="item.price"
-            :skuText="item.spDataValue"
-            priceColor="#FF3000"
-            :titleWidth="450"
-          >
-            <template #tool>
-              <view class="goods-quantity">x{{ item.quantity }}</view>
-            </template>
-          </s-goods-item>
+        <view v-if="state.normalList.length" class="cart-section ss-m-b-24">
+          <view class="section-header ss-flex ss-col-center ss-row-between">
+            <view class="section-title">普通购物车</view>
+            <view class="section-tip">可删除</view>
+          </view>
+          <view class="goods-box ss-r-10 ss-m-b-14" v-for="item in state.normalList" :key="getItemKey(item)">
+            <s-goods-item
+              :title="item.productName"
+              :img="item.pic"
+              :price="item.price"
+              :skuText="item.spDataValue"
+              priceColor="#FF3000"
+              :titleWidth="450"
+            >
+              <template #tool>
+                <view class="goods-tools">
+                  <view class="goods-quantity">x{{ item.quantity }}</view>
+                  <button class="delete-btn ss-reset-button" @tap.stop="handleDelete(item)">删除</button>
+                </view>
+              </template>
+            </s-goods-item>
+          </view>
+        </view>
+
+        <view v-if="state.entryStoreList.length" class="cart-section">
+          <view class="section-header ss-flex ss-col-center ss-row-between">
+            <view class="section-title">无人店购物车</view>
+            <view class="section-tip section-tip-lock">门店内商品，暂不支持删除</view>
+          </view>
+          <view class="goods-box ss-r-10 ss-m-b-14" v-for="item in state.entryStoreList" :key="getItemKey(item)">
+            <s-goods-item
+              :title="item.productName"
+              :img="item.pic"
+              :price="item.price"
+              :skuText="item.spDataValue"
+              priceColor="#FF3000"
+              :titleWidth="450"
+            >
+              <template #tool>
+                <view class="goods-tools">
+                  <view class="goods-quantity">x{{ item.quantity }}</view>
+                  <view class="readonly-tag">到店结算</view>
+                </view>
+              </template>
+            </s-goods-item>
+          </view>
         </view>
       </view>
     </view>
@@ -47,6 +80,8 @@
 
   const state = reactive({
     list: computed(() => cart.list),
+    normalList: computed(() => cart.list.filter((item) => item.cartSource !== 'entry_store')),
+    entryStoreList: computed(() => cart.list.filter((item) => item.cartSource === 'entry_store')),
     refreshTimer: null,
     isRefreshing: false,
   });
@@ -73,6 +108,17 @@
     state.refreshTimer = setInterval(() => {
       refreshCartList();
     }, CART_POLLING_INTERVAL);
+  }
+
+  function getItemKey(item) {
+    return `${item.cartSource || 'normal'}-${item.id}-${item.sessionId || ''}`;
+  }
+
+  async function handleDelete(item) {
+    if (!item || item.deletable === false) {
+      return;
+    }
+    await cart.delete(item.id);
   }
 
   onShow(() => {
@@ -112,10 +158,38 @@
     .cart-content {
       margin-top: 70rpx;
 
+      .cart-section {
+        .section-header {
+          padding: 18rpx 4rpx 20rpx;
+        }
+
+        .section-title {
+          font-size: 28rpx;
+          font-weight: 600;
+          color: #303133;
+        }
+
+        .section-tip {
+          font-size: 22rpx;
+          color: #909399;
+        }
+
+        .section-tip-lock {
+          color: #c17b2d;
+        }
+      }
+
       .goods-box {
         background-color: #fff;
       }
     }
+  }
+
+  .goods-tools {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12rpx;
   }
 
   .goods-quantity {
@@ -123,5 +197,17 @@
     text-align: right;
     font-size: 24rpx;
     color: #999;
+  }
+
+  .delete-btn {
+    font-size: 22rpx;
+    color: #ff5a5f;
+    line-height: 1;
+  }
+
+  .readonly-tag {
+    font-size: 22rpx;
+    color: #c17b2d;
+    line-height: 1;
   }
 </style>
