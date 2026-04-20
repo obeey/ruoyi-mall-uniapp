@@ -18,7 +18,7 @@
     <button class="ss-reset-button cancel-btn ui-Shadow-Pioneer-Main" @tap="wechatLoginWithoutPhone">
       <view class="ss-flex">
         <!--        <image class="auto-login-img" :src="sheep.$url.static('/image/weixin.svg')"/>-->
-        <view>微信登录（不绑定手机号）</view>
+        <view>微信登录</view>
       </view>
     </button>
   </view>
