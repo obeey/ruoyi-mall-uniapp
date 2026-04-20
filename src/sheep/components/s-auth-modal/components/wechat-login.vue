@@ -76,7 +76,8 @@ async function wechatLoginWithoutPhone() {
       sheep.$helper.toast('微信授权码获取失败，请检查小程序 AppID 配置');
       return;
     }
-    const res = await third.wechat.miniLogin({ code: loginResult.code });
+    const profile = await sheep.$platform.useProvider("wechat").getWechatProfile();
+    const res = await third.wechat.miniLogin({ code: loginResult.code, ...profile });
     const openId = res?.data?.openId;
     if (openId) {
       uni.setStorageSync('openId', openId);

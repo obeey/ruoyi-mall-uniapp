@@ -7,6 +7,23 @@ import Base64 from 'base-64';
 let sessionId = uni.getStorageSync('sessionId');
 let subscribeEventList = [];
 
+const getWechatProfile = async () => {
+  if (typeof uni.getUserProfile !== 'function') {
+    return {};
+  }
+  try {
+    const profile = await uni.getUserProfile({ desc: '用于完善会员资料' });
+    const userInfo = profile?.userInfo || {};
+    return {
+      nickname: userInfo.nickName || '',
+      avatar: userInfo.avatarUrl || '',
+    };
+  } catch (error) {
+    console.warn('getUserProfile failed', error);
+    return {};
+  }
+};
+
 // 加载微信小程序
 function load() {
   checkUpdate();
@@ -27,12 +44,15 @@ const login = async (e) => {
       return;
     }
     const { encryptedData, iv } = e;
+    const profile = await getWechatProfile();
     const data = Base64.encode(
         JSON.stringify({
           data: encryptedData,
           key: iv,
           openId: uni.getStorageSync("openId"),
           sessionKey: uni.getStorageSync("sessionId"),
+          nickname: profile.nickname,
+          avatar: profile.avatar,
         })
     )
     third.wechat.login({ data }).then(resp => {
@@ -212,4 +232,5 @@ export default {
   checkUpdate,
   bindUserPhoneNumber,
   subscribeMessage,
+  getWechatProfile,
 };
